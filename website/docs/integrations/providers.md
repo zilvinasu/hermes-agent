@@ -27,6 +27,7 @@ You need at least one way to connect to an LLM. Use `hermes model` to switch pro
 | **z.ai / GLM** | `GLM_API_KEY` in `~/.hermes/.env` (provider: `zai`) |
 | **Kimi / Moonshot** | `KIMI_API_KEY` in `~/.hermes/.env` (provider: `kimi-coding`) |
 | **Kimi / Moonshot (China)** | `KIMI_CN_API_KEY` in `~/.hermes/.env` (provider: `kimi-coding-cn`; aliases: `kimi-cn`, `moonshot-cn`) |
+| **Kimchi (kimchi.dev)** | `KIMCHI_API_KEY` in `~/.hermes/.env` (provider: `kimchi`; ACP harness provider: `kimchi-acp`) |
 | **Arcee AI** | `ARCEEAI_API_KEY` in `~/.hermes/.env` (provider: `arcee`; aliases: `arcee-ai`, `arceeai`) |
 | **GMI Cloud** | `GMI_API_KEY` in `~/.hermes/.env` (provider: `gmi`; aliases: `gmi-cloud`, `gmicloud`) |
 | **Nebius Token Factory** | `NEBIUS_API_KEY` in `~/.hermes/.env` (provider: `nebius-token-factory`; aliases: `nebius`, `nebius-tf`, `tokenfactory`) |
@@ -300,6 +301,10 @@ hermes chat --provider kimi-coding --model kimi-for-coding
 # Kimi / Moonshot AI (China: api.moonshot.cn)
 hermes chat --provider kimi-coding-cn --model kimi-k2.5
 # Requires: KIMI_CN_API_KEY in ~/.hermes/.env
+
+# Kimchi (kimchi.dev)
+hermes chat --provider kimchi --model kimi-k3
+# Requires: KIMCHI_API_KEY in ~/.hermes/.env
 
 # MiniMax (global endpoint)
 hermes chat --provider minimax --model MiniMax-M2.7
@@ -607,6 +612,35 @@ model:
 ```
 
 The base URL can be overridden with `GMI_BASE_URL` (default: `https://api.gmi-serving.com/v1`).
+
+### Kimchi (kimchi.dev)
+
+Agentic models via [Kimchi](https://kimchi.dev/) — OpenAI-compatible API, API key authentication.
+
+```bash
+# Kimchi
+hermes chat --provider kimchi --model kimi-k3
+# Requires: KIMCHI_API_KEY in ~/.hermes/.env
+```
+
+Or set it permanently in `config.yaml`:
+```yaml
+model:
+  provider: "kimchi"
+  default: "kimi-k3"
+```
+
+The base URL can be overridden with `KIMCHI_BASE_URL` (default: `https://llm.kimchi.dev/openai/v1`). The model catalog is discovered live from Kimchi's metadata endpoint — no hardcoded fallback list.
+
+#### Kimchi harness over ACP (`kimchi-acp`)
+
+Drives the local Kimchi CLI (`kimchi --mode acp`) over the Agent Client Protocol, so the Kimchi harness itself runs the turn — its own tools, skills, and permission modes, with tool activity rendered inline as it works. Requires the Kimchi CLI installed and logged in (`kimchi login`); no API key is shared with Hermes (the subprocess owns its own auth).
+
+```bash
+hermes chat --provider kimchi-acp --model kimchi-dev/kimi-k3
+```
+
+Spawn arguments default to `--mode acp --yolo` (the harness's no-restrictions permission mode — tools execute without approval prompts). Override with `KIMCHI_ACP_ARGS` (e.g. `KIMCHI_ACP_ARGS="--mode acp"` to keep Kimchi's approval gates on) and point `KIMCHI_ACP_COMMAND` at a custom CLI path.
 
 ### Actual Computer
 
