@@ -137,3 +137,20 @@ class TestLenientParser:
             ]
         }
         assert lenient_model_ids(payload) == ["kept", "no-timestamp"]
+
+
+class TestErrorClassification:
+    def test_unknown_model_400_classified_as_model_not_found(self, kimchi_profile):
+        """Cross-provider default ids (e.g. a leaked global model.default)
+        400 with a routing-specific body — classify as model_not_found, not
+        format_error (Desktop error observed 2026-09-29)."""
+        verdict = kimchi_profile.classify_api_error(
+            status_code=400,
+            body='{"error":"no registered providers found for the requested model"}',
+        )
+        assert verdict == {"reason": "model_not_found", "retryable": False, "should_fallback": True}
+
+    def test_unrelated_errors_stay_unclassified(self, kimchi_profile):
+        assert kimchi_profile.classify_api_error(status_code=400, body='{"error":"bad json"}') is None
+        assert kimchi_profile.classify_api_error(status_code=429, body="no registered providers found") is None
+        assert kimchi_profile.classify_api_error(status_code=400) is None
